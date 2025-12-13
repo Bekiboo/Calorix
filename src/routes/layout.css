@@ -116,6 +116,16 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+		/* Remove mobile browser bars */
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
+	}
+	#app,
+	[data-sveltekit-preload-data] {
+		height: 100%;
+		overflow-y: auto;
+		overflow-x: hidden;
 	}
 }
 
