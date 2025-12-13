@@ -41,7 +41,7 @@
 </script>
 
 <div
-	class="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4 dark:from-blue-950/30 dark:to-gray-950"
+	class="flex min-h-screen items-center justify-center bg-linear-to-b from-blue-50 to-white p-4 dark:from-blue-950/30 dark:to-gray-950"
 >
 	<Card class="w-full max-w-md">
 		<CardHeader>

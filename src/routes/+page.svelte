@@ -3,13 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
-	import {
 		Dialog,
 		DialogContent,
 		DialogDescription,
@@ -19,7 +12,6 @@
 	} from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Progress } from '$lib/components/ui/progress';
 	import {
 		loadSettings,
 		getTodayTotals,
@@ -27,7 +19,6 @@
 		addActivity,
 		addWeight,
 		getTodayWeight,
-		saveSettings,
 		type Settings,
 		type DailyTotals
 	} from '$lib/storage';
@@ -40,6 +31,7 @@
 		Settings as SettingsIcon
 	} from '@lucide/svelte';
 	import MainStatCard from './MainStatCard.svelte';
+	import SettingsDialog from './SettingsDialog.svelte';
 
 	let settings = $state<Settings | null>(null);
 	let totals = $state<DailyTotals>({ consumed: 0, burned: 0, net: 0 });
@@ -49,8 +41,6 @@
 	let calorieInput = $state('');
 	let activityInput = $state('');
 	let weightInput = $state('');
-	let goalInput = $state('');
-	let maxInput = $state('');
 	let addCaloriesOpen = $state(false);
 	let addActivityOpen = $state(false);
 	let addWeightOpen = $state(false);
@@ -115,51 +105,13 @@
 		addWeightOpen = false;
 	}
 
-	async function handleUpdateSettings() {
-		if (!settings) return;
-
-		const goal = parseInt(goalInput);
-		const max = maxInput ? parseInt(maxInput) : undefined;
-
-		if (!goal || goal <= 0) return;
-		if (max && max <= goal) return;
-
-		await saveSettings({
-			daily_goal: goal,
-			daily_max: max,
-			created_at: settings.created_at
-		});
-
+	async function handleSettingsUpdate() {
 		settings = await loadSettings();
-		goalInput = '';
-		maxInput = '';
-		editSettingsOpen = false;
 	}
 
 	onMount(() => {
 		loadData();
 	});
-
-	$effect(() => {
-		if (settings && totals) {
-			// This will trigger reactivity when totals change
-		}
-	});
-
-	function getProgressPercentage(): number {
-		if (!settings) return 0;
-		return Math.min((totals.consumed / settings.daily_goal) * 100, 100);
-	}
-
-	function getRemainingCalories(): number {
-		if (!settings) return 0;
-		return settings.daily_goal - totals.net;
-	}
-
-	function isOverMax(): boolean {
-		if (!settings?.daily_max) return false;
-		return totals.consumed > settings.daily_max;
-	}
 </script>
 
 {#if loading}
@@ -168,7 +120,7 @@
 	</div>
 {:else if settings}
 	<div
-		class="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 pb-20 dark:from-blue-950/30 dark:to-gray-950"
+		class="min-h-screen bg-linear-to-b from-blue-50 to-white p-4 pb-20 dark:from-blue-950/30 dark:to-gray-950"
 	>
 		<div class="mx-auto max-w-2xl space-y-6">
 			<!-- Header -->
@@ -182,8 +134,6 @@
 					variant="ghost"
 					size="icon"
 					onclick={() => {
-						goalInput = settings?.daily_goal.toString() || '';
-						maxInput = settings?.daily_max?.toString() || '';
 						editSettingsOpen = true;
 					}}
 				>
@@ -303,40 +253,12 @@
 			</div>
 
 			<!-- Settings Dialog -->
-			<Dialog bind:open={editSettingsOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Edit Settings</DialogTitle>
-						<DialogDescription>Update your daily calorie goals</DialogDescription>
-					</DialogHeader>
-					<form
-						onsubmit={(e) => {
-							e.preventDefault();
-							handleUpdateSettings();
-						}}
-						class="space-y-4"
-					>
-						<div class="space-y-2">
-							<Label for="edit-goal">Daily Calorie Goal *</Label>
-							<Input
-								id="edit-goal"
-								type="number"
-								placeholder="e.g., 2000"
-								bind:value={goalInput}
-								autofocus
-							/>
-						</div>
-
-						<div class="space-y-2">
-							<Label for="edit-max">Daily Maximum (optional)</Label>
-							<Input id="edit-max" type="number" placeholder="e.g., 2500" bind:value={maxInput} />
-							<p class="text-sm text-muted-foreground">Leave empty to remove the maximum limit</p>
-						</div>
-
-						<Button type="submit" class="w-full">Update Settings</Button>
-					</form>
-				</DialogContent>
-			</Dialog>
+			<SettingsDialog
+				bind:open={editSettingsOpen}
+				{settings}
+				onClose={() => (editSettingsOpen = false)}
+				onUpdate={handleSettingsUpdate}
+			/>
 
 			<!-- Navigation -->
 			<div class="grid grid-cols-2 gap-4">
