@@ -109,7 +109,7 @@
 	</div>
 {:else if settings}
 	<div
-		class="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/30 dark:to-gray-950 p-4 pb-20"
+		class="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 pb-20 dark:from-blue-950/30 dark:to-gray-950"
 	>
 		<div class="mx-auto max-w-2xl space-y-6">
 			<!-- Header -->
