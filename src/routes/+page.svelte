@@ -69,7 +69,12 @@
 
 	async function handleAddCalories() {
 		const calories = parseInt(calorieInput);
-		if (!calories || calories <= 0) return;
+		if (!calories) return;
+
+		// Allow negative values only if total won't go negative
+		if (calories < 0 && totals.consumed + calories < 0) {
+			return;
+		}
 
 		await addEntry(calories);
 		totals = await getTodayTotals();
@@ -79,7 +84,12 @@
 
 	async function handleAddActivity() {
 		const calories = parseInt(activityInput);
-		if (!calories || calories <= 0) return;
+		if (!calories) return;
+
+		// Allow negative values only if total won't go negative
+		if (calories < 0 && totals.burned + calories < 0) {
+			return;
+		}
 
 		await addActivity(calories);
 		totals = await getTodayTotals();
@@ -136,6 +146,75 @@
 			<div class="pt-6 text-center">
 				<h1 class="text-3xl font-bold text-foreground">Calorix</h1>
 				<p class="mt-1 text-sm text-muted-foreground">{todayDate}</p>
+			</div>
+			<div class="grid grid-cols-2 gap-4">
+				<Dialog bind:open={addCaloriesOpen}>
+					<DialogTrigger>
+						<Button class="h-20 w-full text-lg">
+							<Plus class="mr-2 h-5 w-5" />
+							Add Calories
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Add Calories</DialogTitle>
+							<DialogDescription>Enter the number of calories consumed</DialogDescription>
+						</DialogHeader>
+						<form
+							onsubmit={(e) => {
+								e.preventDefault();
+								handleAddCalories();
+							}}
+							class="space-y-4"
+						>
+							<div class="space-y-2">
+								<Label for="calories">Calories</Label>
+								<Input
+									id="calories"
+									type="number"
+									placeholder="e.g., 500"
+									bind:value={calorieInput}
+									autofocus
+								/>
+							</div>
+							<Button type="submit" class="w-full">Add</Button>
+						</form>
+					</DialogContent>
+				</Dialog>
+
+				<Dialog bind:open={addActivityOpen}>
+					<DialogTrigger>
+						<Button variant="outline" class="h-20 w-full text-lg">
+							<Activity class="mr-2 h-5 w-5" />
+							Add Activity
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Add Activity</DialogTitle>
+							<DialogDescription>Enter the number of calories burned</DialogDescription>
+						</DialogHeader>
+						<form
+							onsubmit={(e) => {
+								e.preventDefault();
+								handleAddActivity();
+							}}
+							class="space-y-4"
+						>
+							<div class="space-y-2">
+								<Label for="activity">Calories Burned</Label>
+								<Input
+									id="activity"
+									type="number"
+									placeholder="e.g., 300"
+									bind:value={activityInput}
+									autofocus
+								/>
+							</div>
+							<Button type="submit" class="w-full">Add</Button>
+						</form>
+					</DialogContent>
+				</Dialog>
 			</div>
 
 			<!-- Main Stats Card -->
@@ -231,74 +310,6 @@
 
 			<!-- Action Buttons -->
 			<div class="grid grid-cols-2 gap-4">
-				<Dialog bind:open={addCaloriesOpen}>
-					<DialogTrigger>
-						<Button class="h-20 w-full text-lg">
-							<Plus class="mr-2 h-5 w-5" />
-							Add Calories
-						</Button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Add Calories</DialogTitle>
-							<DialogDescription>Enter the number of calories consumed</DialogDescription>
-						</DialogHeader>
-						<form
-							onsubmit={(e) => {
-								e.preventDefault();
-								handleAddCalories();
-							}}
-							class="space-y-4"
-						>
-							<div class="space-y-2">
-								<Label for="calories">Calories</Label>
-								<Input
-									id="calories"
-									type="number"
-									placeholder="e.g., 500"
-									bind:value={calorieInput}
-									autofocus
-								/>
-							</div>
-							<Button type="submit" class="w-full">Add</Button>
-						</form>
-					</DialogContent>
-				</Dialog>
-
-				<Dialog bind:open={addActivityOpen}>
-					<DialogTrigger>
-						<Button variant="outline" class="h-20 w-full text-lg">
-							<Activity class="mr-2 h-5 w-5" />
-							Add Activity
-						</Button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Add Activity</DialogTitle>
-							<DialogDescription>Enter the number of calories burned</DialogDescription>
-						</DialogHeader>
-						<form
-							onsubmit={(e) => {
-								e.preventDefault();
-								handleAddActivity();
-							}}
-							class="space-y-4"
-						>
-							<div class="space-y-2">
-								<Label for="activity">Calories Burned</Label>
-								<Input
-									id="activity"
-									type="number"
-									placeholder="e.g., 300"
-									bind:value={activityInput}
-									autofocus
-								/>
-							</div>
-							<Button type="submit" class="w-full">Add</Button>
-						</form>
-					</DialogContent>
-				</Dialog>
-
 				<Dialog bind:open={addWeightOpen}>
 					<DialogTrigger>
 						<Button variant="outline" class="col-span-2 h-20 w-full text-lg">
@@ -333,18 +344,17 @@
 						</form>
 					</DialogContent>
 				</Dialog>
-			</div>
-
-			<!-- Navigation -->
-			<div class="grid grid-cols-2 gap-4">
-				<Button variant="outline" onclick={() => goto('/history')}>
-					<History class="mr-2 h-4 w-4" />
-					View History
-				</Button>
-				<Button variant="outline" onclick={() => goto('/stats')}>
-					<TrendingUp class="mr-2 h-4 w-4" />
-					View Stats
-				</Button>
+				<!-- Navigation -->
+				<div class="grid grid-rows-2 gap-4">
+					<Button variant="outline" onclick={() => goto('/history')}>
+						<History class="mr-2 h-4 w-4" />
+						View History
+					</Button>
+					<Button variant="outline" onclick={() => goto('/stats')}>
+						<TrendingUp class="mr-2 h-4 w-4" />
+						View Stats
+					</Button>
+				</div>
 			</div>
 		</div>
 	</div>
