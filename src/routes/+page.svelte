@@ -25,13 +25,20 @@
 		getTodayTotals,
 		addEntry,
 		addActivity,
-		consolidatePastDays,
 		addWeight,
 		getTodayWeight,
+		saveSettings,
 		type Settings,
 		type DailyTotals
 	} from '$lib/storage';
-	import { Plus, Activity, History, TrendingUp, Scale } from '@lucide/svelte';
+	import {
+		Plus,
+		Activity,
+		History,
+		TrendingUp,
+		Scale,
+		Settings as SettingsIcon
+	} from '@lucide/svelte';
 	import MainStatCard from './MainStatCard.svelte';
 
 	let settings = $state<Settings | null>(null);
@@ -42,9 +49,12 @@
 	let calorieInput = $state('');
 	let activityInput = $state('');
 	let weightInput = $state('');
+	let goalInput = $state('');
+	let maxInput = $state('');
 	let addCaloriesOpen = $state(false);
 	let addActivityOpen = $state(false);
 	let addWeightOpen = $state(false);
+	let editSettingsOpen = $state(false);
 
 	const todayDate = new Date().toLocaleDateString('en-US', {
 		weekday: 'long',
@@ -54,9 +64,6 @@
 	});
 
 	async function loadData() {
-		// Consolidate past days first
-		await consolidatePastDays();
-
 		const s = await loadSettings();
 		if (!s) {
 			goto('/setup');
@@ -108,6 +115,27 @@
 		addWeightOpen = false;
 	}
 
+	async function handleUpdateSettings() {
+		if (!settings) return;
+
+		const goal = parseInt(goalInput);
+		const max = maxInput ? parseInt(maxInput) : undefined;
+
+		if (!goal || goal <= 0) return;
+		if (max && max <= goal) return;
+
+		await saveSettings({
+			daily_goal: goal,
+			daily_max: max,
+			created_at: settings.created_at
+		});
+
+		settings = await loadSettings();
+		goalInput = '';
+		maxInput = '';
+		editSettingsOpen = false;
+	}
+
 	onMount(() => {
 		loadData();
 	});
@@ -144,10 +172,25 @@
 	>
 		<div class="mx-auto max-w-2xl space-y-6">
 			<!-- Header -->
-			<div class="pt-6 text-center">
-				<h1 class="text-3xl font-bold text-foreground">Calorix</h1>
-				<p class="mt-1 text-sm text-muted-foreground">{todayDate}</p>
+			<div class="flex items-center justify-between pt-6">
+				<div></div>
+				<div class="text-center">
+					<h1 class="text-3xl font-bold text-foreground">Calorix</h1>
+					<p class="mt-1 text-sm text-muted-foreground">{todayDate}</p>
+				</div>
+				<Button
+					variant="ghost"
+					size="icon"
+					onclick={() => {
+						goalInput = settings?.daily_goal.toString() || '';
+						maxInput = settings?.daily_max?.toString() || '';
+						editSettingsOpen = true;
+					}}
+				>
+					<SettingsIcon class="h-5 w-5" />
+				</Button>
 			</div>
+
 			<div class="grid grid-cols-2 gap-4">
 				<Dialog bind:open={addCaloriesOpen}>
 					<DialogTrigger>
@@ -257,17 +300,54 @@
 						</form>
 					</DialogContent>
 				</Dialog>
-				<!-- Navigation -->
-				<div class="grid grid-rows-2 gap-4">
-					<Button variant="outline" onclick={() => goto('/history')}>
-						<History class="mr-2 h-4 w-4" />
-						View History
-					</Button>
-					<Button variant="outline" onclick={() => goto('/stats')}>
-						<TrendingUp class="mr-2 h-4 w-4" />
-						View Stats
-					</Button>
-				</div>
+			</div>
+
+			<!-- Settings Dialog -->
+			<Dialog bind:open={editSettingsOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Edit Settings</DialogTitle>
+						<DialogDescription>Update your daily calorie goals</DialogDescription>
+					</DialogHeader>
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handleUpdateSettings();
+						}}
+						class="space-y-4"
+					>
+						<div class="space-y-2">
+							<Label for="edit-goal">Daily Calorie Goal *</Label>
+							<Input
+								id="edit-goal"
+								type="number"
+								placeholder="e.g., 2000"
+								bind:value={goalInput}
+								autofocus
+							/>
+						</div>
+
+						<div class="space-y-2">
+							<Label for="edit-max">Daily Maximum (optional)</Label>
+							<Input id="edit-max" type="number" placeholder="e.g., 2500" bind:value={maxInput} />
+							<p class="text-sm text-muted-foreground">Leave empty to remove the maximum limit</p>
+						</div>
+
+						<Button type="submit" class="w-full">Update Settings</Button>
+					</form>
+				</DialogContent>
+			</Dialog>
+
+			<!-- Navigation -->
+			<div class="grid grid-cols-2 gap-4">
+				<Button variant="outline" onclick={() => goto('/history')}>
+					<History class="mr-2 h-4 w-4" />
+					View History
+				</Button>
+				<Button variant="outline" onclick={() => goto('/stats')}>
+					<TrendingUp class="mr-2 h-4 w-4" />
+					View Stats
+				</Button>
 			</div>
 		</div>
 	</div>
