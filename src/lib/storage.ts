@@ -20,6 +20,13 @@ export interface Activity {
 	timestamp: number;
 }
 
+export interface WeightEntry {
+	id: string;
+	date: string; // YYYY-MM-DD
+	weight: number; // in kg or lbs
+	timestamp: number;
+}
+
 export interface DailyTotals {
 	consumed: number;
 	burned: number;
@@ -79,6 +86,35 @@ export async function addActivity(calories_burned: number): Promise<void> {
 
 export async function getAllActivities(): Promise<Activity[]> {
 	return (await get<Activity[]>('activities')) || [];
+}
+
+// Weight entries
+export async function addWeight(weight: number): Promise<void> {
+	const weights = (await get<WeightEntry[]>('weights')) || [];
+	const today = getTodayDate();
+	
+	// Remove any existing weight entry for today
+	const filteredWeights = weights.filter((w) => w.date !== today);
+	
+	const newWeight: WeightEntry = {
+		id: generateId(),
+		date: today,
+		weight,
+		timestamp: Date.now()
+	};
+	filteredWeights.push(newWeight);
+	await set('weights', filteredWeights);
+}
+
+export async function getAllWeights(): Promise<WeightEntry[]> {
+	return (await get<WeightEntry[]>('weights')) || [];
+}
+
+export async function getTodayWeight(): Promise<number | null> {
+	const today = getTodayDate();
+	const weights = await getAllWeights();
+	const todayWeight = weights.find((w) => w.date === today);
+	return todayWeight ? todayWeight.weight : null;
 }
 
 // Get today's totals

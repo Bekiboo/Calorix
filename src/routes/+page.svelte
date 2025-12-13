@@ -26,19 +26,24 @@
 		addEntry,
 		addActivity,
 		consolidatePastDays,
+		addWeight,
+		getTodayWeight,
 		type Settings,
 		type DailyTotals
 	} from '$lib/storage';
-	import { Plus, Activity, History, TrendingUp } from '@lucide/svelte';
+	import { Plus, Activity, History, TrendingUp, Scale } from '@lucide/svelte';
 
 	let settings = $state<Settings | null>(null);
 	let totals = $state<DailyTotals>({ consumed: 0, burned: 0, net: 0 });
+	let todayWeight = $state<number | null>(null);
 	let loading = $state(true);
 
 	let calorieInput = $state('');
 	let activityInput = $state('');
+	let weightInput = $state('');
 	let addCaloriesOpen = $state(false);
 	let addActivityOpen = $state(false);
+	let addWeightOpen = $state(false);
 
 	const todayDate = new Date().toLocaleDateString('en-US', {
 		weekday: 'long',
@@ -58,6 +63,7 @@
 		}
 		settings = s;
 		totals = await getTodayTotals();
+		todayWeight = await getTodayWeight();
 		loading = false;
 	}
 
@@ -79,6 +85,16 @@
 		totals = await getTodayTotals();
 		activityInput = '';
 		addActivityOpen = false;
+	}
+
+	async function handleAddWeight() {
+		const weight = parseFloat(weightInput);
+		if (!weight || weight <= 0) return;
+
+		await addWeight(weight);
+		todayWeight = weight;
+		weightInput = '';
+		addWeightOpen = false;
 	}
 
 	onMount(() => {
@@ -160,6 +176,14 @@
 						</div>
 					</div>
 
+					<!-- Weight Display -->
+					{#if todayWeight}
+						<div class="flex items-center justify-center gap-2 rounded-lg border bg-muted/50 p-3">
+							<Scale class="h-4 w-4 text-muted-foreground" />
+							<span class="text-sm font-medium">{todayWeight} kg</span>
+						</div>
+					{/if}
+
 					<!-- Warning if over max -->
 					{#if isOverMax()}
 						<div class="rounded-lg border border-red-200 bg-red-50 p-3">
@@ -237,6 +261,41 @@
 								/>
 							</div>
 							<Button type="submit" class="w-full">Add</Button>
+						</form>
+					</DialogContent>
+				</Dialog>
+
+				<Dialog bind:open={addWeightOpen}>
+					<DialogTrigger>
+						<Button variant="outline" class="h-20 w-full text-lg col-span-2">
+							<Scale class="mr-2 h-5 w-5" />
+							{todayWeight ? 'Update' : 'Add'} Weight
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>{todayWeight ? 'Update' : 'Add'} Weight</DialogTitle>
+							<DialogDescription>Enter your weight in kilograms</DialogDescription>
+						</DialogHeader>
+						<form
+							onsubmit={(e) => {
+								e.preventDefault();
+								handleAddWeight();
+							}}
+							class="space-y-4"
+						>
+							<div class="space-y-2">
+								<Label for="weight">Weight (kg)</Label>
+								<Input
+									id="weight"
+									type="number"
+									step="0.1"
+									placeholder="e.g., 70.5"
+									bind:value={weightInput}
+									autofocus
+								/>
+							</div>
+							<Button type="submit" class="w-full">{todayWeight ? 'Update' : 'Add'}</Button>
 						</form>
 					</DialogContent>
 				</Dialog>
