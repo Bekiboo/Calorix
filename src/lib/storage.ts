@@ -84,6 +84,26 @@ export async function getAllEntries(): Promise<Entry[]> {
 	return (await get<Entry[]>('entries')) || [];
 }
 
+export async function updateEntry(date: string, calories: number): Promise<void> {
+	const entries = (await get<Entry[]>('entries')) || [];
+	const existingIndex = entries.findIndex((e) => e.date === date);
+
+	if (existingIndex >= 0) {
+		entries[existingIndex].calories = calories;
+		entries[existingIndex].timestamp = Date.now();
+	} else {
+		const newEntry: Entry = {
+			id: generateId(),
+			date,
+			calories,
+			timestamp: Date.now()
+		};
+		entries.push(newEntry);
+	}
+
+	await set('entries', entries);
+}
+
 // Activities
 export async function addActivity(calories_burned: number): Promise<void> {
 	const activities = (await get<Activity[]>('activities')) || [];
@@ -112,6 +132,26 @@ export async function addActivity(calories_burned: number): Promise<void> {
 
 export async function getAllActivities(): Promise<Activity[]> {
 	return (await get<Activity[]>('activities')) || [];
+}
+
+export async function updateActivity(date: string, calories_burned: number): Promise<void> {
+	const activities = (await get<Activity[]>('activities')) || [];
+	const existingIndex = activities.findIndex((a) => a.date === date);
+
+	if (existingIndex >= 0) {
+		activities[existingIndex].calories_burned = calories_burned;
+		activities[existingIndex].timestamp = Date.now();
+	} else {
+		const newActivity: Activity = {
+			id: generateId(),
+			date,
+			calories_burned,
+			timestamp: Date.now()
+		};
+		activities.push(newActivity);
+	}
+
+	await set('activities', activities);
 }
 
 // Weight entries

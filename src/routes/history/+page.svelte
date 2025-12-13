@@ -3,15 +3,53 @@
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import { getDailyTotals } from '$lib/storage';
-	import { ArrowLeft, Calendar } from '@lucide/svelte';
+	import {
+		Dialog,
+		DialogContent,
+		DialogDescription,
+		DialogHeader,
+		DialogTitle,
+		DialogTrigger
+	} from '$lib/components/ui/dialog';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { getDailyTotals, updateEntry, updateActivity } from '$lib/storage';
+	import { ArrowLeft, Pencil } from '@lucide/svelte';
 
 	let dailyTotals = $state<Record<string, { consumed: number; burned: number; net: number }>>({});
 	let loading = $state(true);
+	let editDialogOpen = $state(false);
+	let editingDate = $state('');
+	let consumedInput = $state('');
+	let burnedInput = $state('');
 
 	async function loadHistory() {
 		dailyTotals = await getDailyTotals();
 		loading = false;
+	}
+
+	function openEditDialog(date: string) {
+		editingDate = date;
+		consumedInput = dailyTotals[date].consumed.toString();
+		burnedInput = dailyTotals[date].burned.toString();
+		editDialogOpen = true;
+	}
+
+	async function handleUpdateDay() {
+		const consumed = parseInt(consumedInput);
+		const burned = parseInt(burnedInput);
+
+		if (isNaN(consumed) || consumed < 0 || isNaN(burned) || burned < 0) return;
+
+		await updateEntry(editingDate, consumed);
+		await updateActivity(editingDate, burned);
+
+		// Reload history
+		await loadHistory();
+
+		consumedInput = '';
+		burnedInput = '';
+		editDialogOpen = false;
 	}
 
 	onMount(() => {
@@ -62,7 +100,16 @@
 				{#each getSortedDates() as date}
 					<Card>
 						<CardHeader class="pb-3">
-							<CardTitle class="text-lg">{formatDate(date)}</CardTitle>
+							<div class="flex items-center justify-between">
+								<CardTitle class="text-lg">{formatDate(date)}</CardTitle>
+								<Button
+									variant="ghost"
+									size="sm"
+									onclick={() => openEditDialog(date)}
+								>
+									<Pencil class="h-4 w-4" />
+								</Button>
+							</div>
 						</CardHeader>
 						<CardContent>
 							<div class="grid grid-cols-3 gap-4">
@@ -90,5 +137,47 @@
 				{/each}
 			</div>
 		{/if}
+
+		<!-- Edit Dialog -->
+		<Dialog bind:open={editDialogOpen}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Edit Day</DialogTitle>
+					<DialogDescription>
+						{editingDate ? formatDate(editingDate) : ''}
+					</DialogDescription>
+				</DialogHeader>
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleUpdateDay();
+					}}
+					class="space-y-4"
+				>
+					<div class="space-y-2">
+						<Label for="edit-consumed">Calories Consumed</Label>
+						<Input
+							id="edit-consumed"
+							type="number"
+							placeholder="e.g., 2000"
+							bind:value={consumedInput}
+							autofocus
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<Label for="edit-burned">Calories Burned</Label>
+						<Input
+							id="edit-burned"
+							type="number"
+							placeholder="e.g., 300"
+							bind:value={burnedInput}
+						/>
+					</div>
+
+					<Button type="submit" class="w-full">Update</Button>
+				</form>
+			</DialogContent>
+		</Dialog>
 	</div>
 </div>
