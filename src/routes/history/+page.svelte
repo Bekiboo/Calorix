@@ -102,11 +102,7 @@
 						<CardHeader class="pb-3">
 							<div class="flex items-center justify-between">
 								<CardTitle class="text-lg">{formatDate(date)}</CardTitle>
-								<Button
-									variant="ghost"
-									size="sm"
-									onclick={() => openEditDialog(date)}
-								>
+								<Button variant="ghost" size="sm" onclick={() => openEditDialog(date)}>
 									<Pencil class="h-4 w-4" />
 								</Button>
 							</div>

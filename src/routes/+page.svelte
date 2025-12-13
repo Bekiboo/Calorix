@@ -28,7 +28,8 @@
 		History,
 		TrendingUp,
 		Scale,
-		Settings as SettingsIcon
+		Settings as SettingsIcon,
+		Drumstick
 	} from '@lucide/svelte';
 	import MainStatCard from './MainStatCard.svelte';
 	import SettingsDialog from './SettingsDialog.svelte';
@@ -145,7 +146,7 @@
 				<Dialog bind:open={addCaloriesOpen}>
 					<DialogTrigger>
 						<Button class="h-20 w-full text-lg">
-							<Plus class="mr-2 h-5 w-5" />
+							<Drumstick class="h-8! w-8!" />
 							Add Calories
 						</Button>
 					</DialogTrigger>
@@ -179,7 +180,7 @@
 				<Dialog bind:open={addActivityOpen}>
 					<DialogTrigger>
 						<Button variant="outline" class="h-20 w-full text-lg">
-							<Activity class="mr-2 h-5 w-5" />
+							<Activity class="h-8! w-8!" />
 							Add Activity
 						</Button>
 					</DialogTrigger>
@@ -219,7 +220,7 @@
 				<Dialog bind:open={addWeightOpen}>
 					<DialogTrigger>
 						<Button variant="outline" class="col-span-2 h-20 w-full text-lg">
-							<Scale class="mr-2 h-5 w-5" />
+							<Scale class="h-8! w-8!" />
 							{todayWeight ? 'Update' : 'Add'} Weight
 						</Button>
 					</DialogTrigger>
@@ -250,6 +251,17 @@
 						</form>
 					</DialogContent>
 				</Dialog>
+				<!-- Navigation -->
+				<div class="grid grid-rows-2 gap-2">
+					<Button variant="outline" onclick={() => goto('/history')}>
+						<History class="mr-2 h-4 w-4" />
+						View History
+					</Button>
+					<Button variant="outline" onclick={() => goto('/stats')}>
+						<TrendingUp class="mr-2 h-4 w-4" />
+						View Stats
+					</Button>
+				</div>
 			</div>
 
 			<!-- Settings Dialog -->
@@ -259,18 +271,6 @@
 				onClose={() => (editSettingsOpen = false)}
 				onUpdate={handleSettingsUpdate}
 			/>
-
-			<!-- Navigation -->
-			<div class="grid grid-cols-2 gap-4">
-				<Button variant="outline" onclick={() => goto('/history')}>
-					<History class="mr-2 h-4 w-4" />
-					View History
-				</Button>
-				<Button variant="outline" onclick={() => goto('/stats')}>
-					<TrendingUp class="mr-2 h-4 w-4" />
-					View Stats
-				</Button>
-			</div>
 		</div>
 	</div>
 {/if}

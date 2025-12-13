@@ -21,6 +21,17 @@
 		return settings.daily_goal - totals.net;
 	}
 
+	function getAdjustedGoal(): number {
+		// Goal + calories burned = total you can safely consume
+		return settings.daily_goal + totals.burned;
+	}
+
+	function getAdjustedMax(): number | undefined {
+		// Max + calories burned = total max you can safely consume
+		if (!settings.daily_max) return undefined;
+		return settings.daily_max + totals.burned;
+	}
+
 	function isOverMax(): boolean {
 		if (!settings.daily_max) return false;
 		return totals.consumed > settings.daily_max;
@@ -43,15 +54,15 @@
 			<!-- Custom Progress Bar -->
 			<div class="relative h-3 overflow-hidden rounded-full bg-muted">
 				<!-- Goal section (neutral background) -->
-				{#if settings.daily_max}
+				{#if getAdjustedMax()}
 					<div
 						class="absolute inset-y-0 left-0 bg-gray-200 dark:bg-gray-700"
-						style="width: {(settings.daily_goal / settings.daily_max) * 100}%"
+						style="width: {(getAdjustedGoal() / getAdjustedMax()!) * 100}%"
 					></div>
 					<!-- Max section (yellow background) -->
 					<div
 						class="absolute inset-y-0 bg-yellow-200 dark:bg-yellow-900/50"
-						style="left: {(settings.daily_goal / settings.daily_max) * 100}%; right: 0"
+						style="left: {(getAdjustedGoal() / getAdjustedMax()!) * 100}%; right: 0"
 					></div>
 				{:else}
 					<!-- Fallback when no max is set -->
@@ -61,17 +72,17 @@
 				<!-- Actual progress (consumed calories) -->
 				<div
 					class="absolute inset-y-0 left-0 bg-blue-600 transition-all"
-					style="width: {settings.daily_max
-						? Math.min((totals.consumed / settings.daily_max) * 100, 100)
-						: Math.min((totals.consumed / settings.daily_goal) * 100, 100)}%"
+					style="width: {getAdjustedMax()
+						? Math.min((totals.consumed / getAdjustedMax()!) * 100, 100)
+						: Math.min((totals.consumed / getAdjustedGoal()) * 100, 100)}%"
 				></div>
 			</div>
 
 			<!-- Labels below progress bar -->
 			<div class="flex justify-between text-xs text-muted-foreground">
-				<span>Goal: {settings.daily_goal}</span>
-				{#if settings.daily_max}
-					<span>Max: {settings.daily_max}</span>
+				<span>Adjusted Goal: {getAdjustedGoal()}</span>
+				{#if getAdjustedMax()}
+					<span>Adjusted Max: {getAdjustedMax()}</span>
 				{/if}
 			</div>
 		</div>
@@ -88,9 +99,7 @@
 			</div>
 			<div class="text-center">
 				<p
-					class="text-2xl font-bold {getRemainingCalories() >= 0
-						? 'text-gray-900'
-						: 'text-red-600'}"
+					class="text-2xl font-bold {getRemainingCalories() >= 0 ? 'text-500-900' : 'text-red-600'}"
 				>
 					{getRemainingCalories()}
 				</p>
