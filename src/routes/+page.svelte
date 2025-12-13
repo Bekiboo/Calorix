@@ -149,9 +149,43 @@
 					<div class="space-y-2">
 						<div class="flex justify-between text-sm">
 							<span>Progress</span>
-							<span class="font-medium">{totals.consumed} / {settings.daily_goal} cal</span>
+							<span class="font-medium">{totals.consumed} cal</span>
 						</div>
-						<Progress value={getProgressPercentage()} class="h-3" />
+
+						<!-- Custom Progress Bar -->
+						<div class="relative h-3 overflow-hidden rounded-full bg-muted">
+							<!-- Goal section (neutral background) -->
+							{#if settings.daily_max}
+								<div
+									class="absolute inset-y-0 left-0 bg-gray-200 dark:bg-gray-700"
+									style="width: {(settings.daily_goal / settings.daily_max) * 100}%"
+								></div>
+								<!-- Max section (yellow background) -->
+								<div
+									class="absolute inset-y-0 bg-yellow-200 dark:bg-yellow-900/50"
+									style="left: {(settings.daily_goal / settings.daily_max) * 100}%; right: 0"
+								></div>
+							{:else}
+								<!-- Fallback when no max is set -->
+								<div class="absolute inset-y-0 right-0 left-0 bg-gray-200 dark:bg-gray-700"></div>
+							{/if}
+
+							<!-- Actual progress (consumed calories) -->
+							<div
+								class="absolute inset-y-0 left-0 bg-blue-600 transition-all"
+								style="width: {settings.daily_max
+									? Math.min((totals.consumed / settings.daily_max) * 100, 100)
+									: Math.min((totals.consumed / settings.daily_goal) * 100, 100)}%"
+							></div>
+						</div>
+
+						<!-- Labels below progress bar -->
+						<div class="flex justify-between text-xs text-muted-foreground">
+							<span>Goal: {settings.daily_goal}</span>
+							{#if settings.daily_max}
+								<span>Max: {settings.daily_max}</span>
+							{/if}
+						</div>
 					</div>
 
 					<!-- Stats Grid -->
