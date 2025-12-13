@@ -92,10 +92,10 @@ export async function getAllActivities(): Promise<Activity[]> {
 export async function addWeight(weight: number): Promise<void> {
 	const weights = (await get<WeightEntry[]>('weights')) || [];
 	const today = getTodayDate();
-	
+
 	// Remove any existing weight entry for today
 	const filteredWeights = weights.filter((w) => w.date !== today);
-	
+
 	const newWeight: WeightEntry = {
 		id: generateId(),
 		date: today,

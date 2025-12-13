@@ -267,7 +267,7 @@
 
 				<Dialog bind:open={addWeightOpen}>
 					<DialogTrigger>
-						<Button variant="outline" class="h-20 w-full text-lg col-span-2">
+						<Button variant="outline" class="col-span-2 h-20 w-full text-lg">
 							<Scale class="mr-2 h-5 w-5" />
 							{todayWeight ? 'Update' : 'Add'} Weight
 						</Button>
