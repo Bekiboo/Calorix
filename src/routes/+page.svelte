@@ -25,6 +25,7 @@
 		getTodayTotals,
 		addEntry,
 		addActivity,
+		consolidatePastDays,
 		type Settings,
 		type DailyTotals
 	} from '$lib/storage';
@@ -47,6 +48,9 @@
 	});
 
 	async function loadData() {
+		// Consolidate past days first
+		await consolidatePastDays();
+
 		const s = await loadSettings();
 		if (!s) {
 			goto('/setup');

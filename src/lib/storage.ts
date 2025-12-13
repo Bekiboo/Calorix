@@ -132,3 +132,74 @@ export async function getDailyTotals(): Promise<
 
 	return totals;
 }
+
+// Consolidate past days' entries into single entries per day
+export async function consolidatePastDays(): Promise<void> {
+	const today = getTodayDate();
+	const entries = await getAllEntries();
+	const activities = await getAllActivities();
+
+	// Group entries by date
+	const entriesByDate = new Map<string, Entry[]>();
+	entries.forEach((entry) => {
+		if (!entriesByDate.has(entry.date)) {
+			entriesByDate.set(entry.date, []);
+		}
+		entriesByDate.get(entry.date)!.push(entry);
+	});
+
+	// Group activities by date
+	const activitiesByDate = new Map<string, Activity[]>();
+	activities.forEach((activity) => {
+		if (!activitiesByDate.has(activity.date)) {
+			activitiesByDate.set(activity.date, []);
+		}
+		activitiesByDate.get(activity.date)!.push(activity);
+	});
+
+	// Consolidate entries for past days (not today)
+	const consolidatedEntries: Entry[] = [];
+	for (const [date, dateEntries] of entriesByDate) {
+		if (date === today) {
+			// Keep all today's entries as-is
+			consolidatedEntries.push(...dateEntries);
+		} else if (dateEntries.length > 1) {
+			// Consolidate multiple entries into one
+			const totalCalories = dateEntries.reduce((sum, e) => sum + e.calories, 0);
+			consolidatedEntries.push({
+				id: generateId(),
+				date,
+				calories: totalCalories,
+				timestamp: Math.min(...dateEntries.map((e) => e.timestamp))
+			});
+		} else {
+			// Already consolidated (single entry)
+			consolidatedEntries.push(dateEntries[0]);
+		}
+	}
+
+	// Consolidate activities for past days (not today)
+	const consolidatedActivities: Activity[] = [];
+	for (const [date, dateActivities] of activitiesByDate) {
+		if (date === today) {
+			// Keep all today's activities as-is
+			consolidatedActivities.push(...dateActivities);
+		} else if (dateActivities.length > 1) {
+			// Consolidate multiple activities into one
+			const totalBurned = dateActivities.reduce((sum, a) => sum + a.calories_burned, 0);
+			consolidatedActivities.push({
+				id: generateId(),
+				date,
+				calories_burned: totalBurned,
+				timestamp: Math.min(...dateActivities.map((a) => a.timestamp))
+			});
+		} else {
+			// Already consolidated (single activity)
+			consolidatedActivities.push(dateActivities[0]);
+		}
+	}
+
+	// Save consolidated data
+	await set('entries', consolidatedEntries);
+	await set('activities', consolidatedActivities);
+}
