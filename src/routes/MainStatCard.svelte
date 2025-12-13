@@ -61,7 +61,7 @@
 					></div>
 					<!-- Max section (yellow background) -->
 					<div
-						class="absolute inset-y-0 bg-yellow-200 dark:bg-yellow-900/50"
+						class="absolute inset-y-0 bg-red-400"
 						style="left: {(getAdjustedGoal() / getAdjustedMax()!) * 100}%; right: 0"
 					></div>
 				{:else}
@@ -71,7 +71,7 @@
 
 				<!-- Actual progress (consumed calories) -->
 				<div
-					class="absolute inset-y-0 left-0 bg-blue-600 transition-all"
+					class="bg- absolute inset-y-0 left-0 bg-blue-400 transition-all"
 					style="width: {getAdjustedMax()
 						? Math.min((totals.consumed / getAdjustedMax()!) * 100, 100)
 						: Math.min((totals.consumed / getAdjustedGoal()) * 100, 100)}%"
@@ -90,11 +90,11 @@
 		<!-- Stats Grid -->
 		<div class="grid grid-cols-3 gap-4 pt-4">
 			<div class="text-center">
-				<p class="text-2xl font-bold text-blue-600">{totals.consumed}</p>
+				<p class="text-2xl font-bold text-blue-400">{totals.consumed}</p>
 				<p class="mt-1 text-xs text-muted-foreground">Consumed</p>
 			</div>
 			<div class="text-center">
-				<p class="text-2xl font-bold text-green-600">{totals.burned}</p>
+				<p class="text-2xl font-bold text-green-400">{totals.burned}</p>
 				<p class="mt-1 text-xs text-muted-foreground">Burned</p>
 			</div>
 			<div class="text-center">

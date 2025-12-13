@@ -105,9 +105,7 @@
 	});
 </script>
 
-<div
-	class="min-h-screen bg-linear-to-b from-blue-50 to-white p-4 pb-20 dark:from-blue-950/30 dark:to-gray-950"
->
+<div class="min-h-screen p-4 pb-20 dark:from-blue-950/30 dark:to-gray-950">
 	<div class="mx-auto max-w-2xl space-y-6">
 		<!-- Header -->
 		<div class="flex items-center justify-between pt-6">

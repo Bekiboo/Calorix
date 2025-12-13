@@ -71,9 +71,7 @@
 	}
 </script>
 
-<div
-	class="min-h-screen bg-linear-to-b from-blue-50 to-white p-4 pb-20 dark:from-blue-950/30 dark:to-gray-950"
->
+<div class="min-h-screenp-4 pb-20 dark:from-blue-950/30 dark:to-gray-950">
 	<div class="mx-auto max-w-2xl space-y-6">
 		<!-- Header -->
 		<div class="flex items-center justify-between pt-6">
@@ -111,11 +109,11 @@
 							<div class="grid grid-cols-3 gap-4">
 								<div>
 									<p class="text-sm text-muted-foreground">Consumed</p>
-									<p class="text-xl font-semibold text-blue-600">{dailyTotals[date].consumed}</p>
+									<p class="text-xl font-semibold text-blue-400">{dailyTotals[date].consumed}</p>
 								</div>
 								<div>
 									<p class="text-sm text-muted-foreground">Burned</p>
-									<p class="text-xl font-semibold text-green-600">{dailyTotals[date].burned}</p>
+									<p class="text-xl font-semibold text-green-400">{dailyTotals[date].burned}</p>
 								</div>
 								<div>
 									<p class="text-sm text-muted-foreground">Net</p>
