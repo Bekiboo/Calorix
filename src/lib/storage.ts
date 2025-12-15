@@ -10,6 +10,8 @@ export interface Entry {
 	id: string;
 	date: string; // YYYY-MM-DD
 	calories: number;
+	daily_goal: number;
+	daily_max?: number;
 	timestamp: number;
 }
 
@@ -31,6 +33,9 @@ export interface DailyTotals {
 	consumed: number;
 	burned: number;
 	net: number;
+	daily_goal: number;
+	daily_max?: number;
+	remaining: number;
 }
 
 // Generate a simple unique ID
@@ -57,7 +62,10 @@ export async function loadSettings(): Promise<Settings | null> {
 // Entries
 export async function addEntry(calories: number): Promise<void> {
 	const entries = (await get<Entry[]>('entries')) || [];
+	const settings = await loadSettings();
 	const today = getTodayDate();
+
+	if (!settings) return;
 
 	// Find existing entry for today
 	const existingIndex = entries.findIndex((e) => e.date === today);
@@ -65,6 +73,8 @@ export async function addEntry(calories: number): Promise<void> {
 	if (existingIndex >= 0) {
 		// Update existing entry
 		entries[existingIndex].calories += calories;
+		entries[existingIndex].daily_goal = settings.daily_goal;
+		entries[existingIndex].daily_max = settings.daily_max;
 		entries[existingIndex].timestamp = Date.now();
 	} else {
 		// Create new entry for today
@@ -72,6 +82,8 @@ export async function addEntry(calories: number): Promise<void> {
 			id: generateId(),
 			date: today,
 			calories,
+			daily_goal: settings.daily_goal,
+			daily_max: settings.daily_max,
 			timestamp: Date.now()
 		};
 		entries.push(newEntry);
@@ -86,16 +98,24 @@ export async function getAllEntries(): Promise<Entry[]> {
 
 export async function updateEntry(date: string, calories: number): Promise<void> {
 	const entries = (await get<Entry[]>('entries')) || [];
+	const settings = await loadSettings();
 	const existingIndex = entries.findIndex((e) => e.date === date);
 
 	if (existingIndex >= 0) {
 		entries[existingIndex].calories = calories;
 		entries[existingIndex].timestamp = Date.now();
-	} else {
+		// Preserve existing goals if entry already has them
+		if (!entries[existingIndex].daily_goal && settings) {
+			entries[existingIndex].daily_goal = settings.daily_goal;
+			entries[existingIndex].daily_max = settings.daily_max;
+		}
+	} else if (settings) {
 		const newEntry: Entry = {
 			id: generateId(),
 			date,
 			calories,
+			daily_goal: settings.daily_goal,
+			daily_max: settings.daily_max,
 			timestamp: Date.now()
 		};
 		entries.push(newEntry);
@@ -196,50 +216,91 @@ export async function getTodayTotals(): Promise<DailyTotals> {
 	const today = getTodayDate();
 	const entries = await getAllEntries();
 	const activities = await getAllActivities();
+	const settings = await loadSettings();
 
 	const todayEntry = entries.find((e) => e.date === today);
 	const todayActivity = activities.find((a) => a.date === today);
 
 	const consumed = todayEntry ? todayEntry.calories : 0;
 	const burned = todayActivity ? todayActivity.calories_burned : 0;
+	const daily_goal = todayEntry?.daily_goal || settings?.daily_goal || 0;
+	const daily_max = todayEntry?.daily_max || settings?.daily_max;
 
 	return {
 		consumed,
 		burned,
-		net: consumed - burned
+		net: consumed - burned,
+		daily_goal,
+		daily_max,
+		remaining: daily_goal + burned - consumed
 	};
 }
 
 // Get totals grouped by date
-export async function getDailyTotals(): Promise<
-	Record<string, { consumed: number; burned: number; net: number }>
-> {
+export async function getDailyTotals(): Promise<Record<string, DailyTotals>> {
 	const entries = await getAllEntries();
 	const activities = await getAllActivities();
+	const settings = await loadSettings();
 
-	const totals: Record<string, { consumed: number; burned: number; net: number }> = {};
+	const totals: Record<string, DailyTotals> = {};
 
 	// Process entries (one per day)
 	entries.forEach((entry) => {
 		totals[entry.date] = {
 			consumed: entry.calories,
 			burned: 0,
-			net: 0
+			net: 0,
+			daily_goal: entry.daily_goal || settings?.daily_goal || 0,
+			daily_max: entry.daily_max || settings?.daily_max,
+			remaining: 0
 		};
 	});
 
 	// Process activities (one per day)
 	activities.forEach((activity) => {
 		if (!totals[activity.date]) {
-			totals[activity.date] = { consumed: 0, burned: 0, net: 0 };
+			totals[activity.date] = {
+				consumed: 0,
+				burned: 0,
+				net: 0,
+				daily_goal: settings?.daily_goal || 0,
+				daily_max: settings?.daily_max,
+				remaining: 0
+			};
 		}
 		totals[activity.date].burned = activity.calories_burned;
 	});
 
-	// Calculate net for each date
+	// Calculate net and remaining for each date
 	Object.keys(totals).forEach((date) => {
 		totals[date].net = totals[date].consumed - totals[date].burned;
+		totals[date].remaining = totals[date].daily_goal + totals[date].burned - totals[date].consumed;
 	});
 
 	return totals;
+}
+
+// Migration: Backfill daily_goal and daily_max for old entries
+// TODO: Remove this in future versions once all users have migrated
+export async function migrateOldEntries(): Promise<void> {
+	const entries = await getAllEntries();
+	const settings = await loadSettings();
+
+	if (!settings) return;
+
+	let needsUpdate = false;
+
+	entries.forEach((entry) => {
+		// Check if entry is missing goal/max fields (old format)
+		if (!entry.daily_goal) {
+			entry.daily_goal = settings.daily_goal;
+			entry.daily_max = settings.daily_max;
+			needsUpdate = true;
+		}
+	});
+
+	if (needsUpdate) {
+		await set('entries', entries);
+		console.log('Migrated old entries with current settings');
+	}
 }

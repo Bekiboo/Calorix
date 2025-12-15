@@ -19,6 +19,7 @@
 		addActivity,
 		addWeight,
 		getTodayWeight,
+		migrateOldEntries,
 		type Settings,
 		type DailyTotals
 	} from '$lib/storage';
@@ -35,7 +36,14 @@
 	import SettingsDialog from './SettingsDialog.svelte';
 
 	let settings = $state<Settings | null>(null);
-	let totals = $state<DailyTotals>({ consumed: 0, burned: 0, net: 0 });
+	let totals = $state<DailyTotals>({
+		consumed: 0,
+		burned: 0,
+		net: 0,
+		daily_goal: 0,
+		daily_max: undefined,
+		remaining: 0
+	});
 	let todayWeight = $state<number | null>(null);
 	let loading = $state(true);
 
@@ -55,6 +63,9 @@
 	});
 
 	async function loadData() {
+		// Run migration first (TODO: remove in future versions)
+		await migrateOldEntries();
+
 		const s = await loadSettings();
 		if (!s) {
 			goto('/setup');

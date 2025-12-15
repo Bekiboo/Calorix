@@ -13,10 +13,10 @@
 	} from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { getDailyTotals, updateEntry, updateActivity } from '$lib/storage';
+	import { getDailyTotals, updateEntry, updateActivity, type DailyTotals } from '$lib/storage';
 	import { ArrowLeft, Pencil } from '@lucide/svelte';
 
-	let dailyTotals = $state<Record<string, { consumed: number; burned: number; net: number }>>({});
+	let dailyTotals = $state<Record<string, DailyTotals>>({});
 	let loading = $state(true);
 	let editDialogOpen = $state(false);
 	let editingDate = $state('');
@@ -116,13 +116,13 @@
 									<p class="text-xl font-semibold text-green-400">{dailyTotals[date].burned}</p>
 								</div>
 								<div>
-									<p class="text-sm text-muted-foreground">Net</p>
+									<p class="text-sm text-muted-foreground">Remaining</p>
 									<p
-										class="text-xl font-semibold {dailyTotals[date].net >= 0
+										class="text-xl font-semibold {dailyTotals[date].remaining >= 0
 											? 'text-foreground'
 											: 'text-red-600 dark:text-red-400'}"
 									>
-										{dailyTotals[date].net}
+										{dailyTotals[date].remaining}
 									</p>
 								</div>
 							</div>

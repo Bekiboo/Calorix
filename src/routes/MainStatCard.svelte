@@ -119,7 +119,7 @@
 		{#if isOverMax()}
 			<div class="rounded-lg border border-red-200 bg-red-50 p-3">
 				<p class="text-center text-sm text-red-800">
-					⚠️ You've exceeded your daily maximum of {settings.daily_max} calories
+					⚠️ You've exceeded your daily maximum of {(settings.daily_max || 0) + totals.burned} calories
 				</p>
 			</div>
 		{/if}
