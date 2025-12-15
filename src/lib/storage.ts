@@ -274,7 +274,8 @@ export async function getDailyTotals(): Promise<Record<string, DailyTotals>> {
 	// Calculate net and remaining for each date
 	Object.keys(totals).forEach((date) => {
 		totals[date].net = totals[date].consumed - totals[date].burned;
-		totals[date].remaining = totals[date].daily_goal + totals[date].burned - totals[date].consumed;
+		const targetLimit = totals[date].daily_max || totals[date].daily_goal;
+		totals[date].remaining = targetLimit - totals[date].consumed + totals[date].burned;
 	});
 
 	return totals;
